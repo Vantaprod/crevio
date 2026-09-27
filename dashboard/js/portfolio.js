@@ -95,6 +95,9 @@ document.addEventListener("DOMContentLoaded", function () {
         const previewBtn = $("previewBtn");
         if (previewBtn) previewBtn.href = `/p/${slug}`;
 
+        // Highlight the swatch that matches the current primary_color
+        updateColorSwatches();
+
         updateMetaCount();
     }
 
@@ -439,5 +442,27 @@ document.addEventListener("DOMContentLoaded", function () {
     // =========================================================
     // INIT
     // =========================================================
+    // -----------------------------------------------------
+    // COLOR PRESETS
+    // -----------------------------------------------------
+    function updateColorSwatches() {
+        const current = ($("primary_color") && $("primary_color").value || "").toUpperCase();
+        document.querySelectorAll("#colorPresets .swatch").forEach(function (sw) {
+            const match = (sw.dataset.color || "").toUpperCase() === current;
+            sw.classList.toggle("active", match);
+        });
+    }
+
+    document.querySelectorAll("#colorPresets .swatch").forEach(function (sw) {
+        sw.addEventListener("click", function () {
+            const color = sw.dataset.color;
+            if (!color || !$("primary_color")) return;
+            $("primary_color").value = color;
+            updateColorSwatches();
+            saveConfig(true);
+        });
+    });
+
+    $("primary_color")?.addEventListener("input", updateColorSwatches);
     loadAll();
 });

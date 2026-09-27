@@ -3294,6 +3294,28 @@
         "--fg: {{{ theme.fg }}}",
         "--muted: {{{ theme.muted }}}"
       ]
+    },
+    {
+      "id": "phase-27-color-presets-ui",
+      "desc": "Picker has a swatch row under primary_color (10 presets)",
+      "type": "fileContains",
+      "file": "dashboard/pages/portfolio.html",
+      "patterns": [
+        "colorPresets",
+        "data-color=\"#2563EB\"",
+        "data-color=\"#10B981\"",
+        ".color-presets .swatch"
+      ]
+    },
+    {
+      "id": "phase-27-color-presets-js",
+      "desc": "Picker JS wires swatch clicks → primary_color + save + active state",
+      "type": "fileContains",
+      "file": "dashboard/js/portfolio.js",
+      "patterns": [
+        "updateColorSwatches",
+        "#colorPresets .swatch"
+      ]
     }
   ]
 }
