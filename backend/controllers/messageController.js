@@ -865,3 +865,44 @@ exports.getConversationContext = (req, res) => {
         res.status(500).json({ success: false, message: "Failed", error: err.message });
     }
 };
+
+// =========================================================
+// PUBLIC — visitor sends a follow-up message
+// Body: { conversation_id, email, message }
+// =========================================================
+exports.sendVisitorMessage = (req, res) => {
+    try {
+        const conversationId = parseInt(req.body.conversation_id, 10);
+        const email = (req.body.email || "").trim();
+        const message = (req.body.message || "").trim();
+
+        if (!conversationId) return res.status(400).json({ success: false, message: "conversation_id required" });
+        if (!email) return res.status(400).json({ success: false, message: "email required" });
+        if (!message) return res.status(400).json({ success: false, message: "message required" });
+        if (message.length > 2000) return res.status(400).json({ success: false, message: "Message too long (max 2000 chars)" });
+
+        const conv = safeGet("SELECT * FROM conversations WHERE id=? AND LOWER(client_email)=LOWER(?)", conversationId, email);
+        if (!conv) return res.status(404).json({ success: false, message: "Conversation not found" });
+
+        const r = db.prepare("INSERT INTO messages (conversation_id, sender_type, content, created_at) VALUES (?, 'client', ?, CURRENT_TIMESTAMP)").run(conversationId, message);
+
+        try { db.prepare("UPDATE conversations SET updated_at=CURRENT_TIMESTAMP WHERE id=?").run(conversationId); } catch (e) {}
+
+        try {
+            notificationService.create({
+                userId: conv.creator_id,
+                type: "message",
+                title: "New message from " + (conv.client_name || "a client"),
+                message: message.slice(0, 180),
+                entityType: "conversation",
+                entityId: conversationId
+            });
+        } catch (e) {}
+
+        const saved = safeGet("SELECT * FROM messages WHERE id=?", r.lastInsertRowid);
+        res.json({ success: true, message: saved });
+    } catch (err) {
+        console.error("sendVisitorMessage:", err);
+        res.status(500).json({ success: false, message: err.message });
+    }
+};

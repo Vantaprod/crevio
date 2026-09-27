@@ -3004,6 +3004,60 @@
         "#2563EB",
         "text-anchor"
       ]
+    },
+    {
+      "id": "phase-19-contact-visitor-message",
+      "desc": "messageController has sendVisitorMessage for public follow-ups",
+      "type": "fileContains",
+      "file": "backend/controllers/messageController.js",
+      "patterns": [
+        "sendVisitorMessage",
+        "LOWER(client_email)=LOWER(?)"
+      ]
+    },
+    {
+      "id": "phase-19-contact-routes",
+      "desc": "Public contact routes file (start / :id / message)",
+      "type": "fileContains",
+      "file": "backend/routes/publicContactRoutes.js",
+      "patterns": [
+        "/start",
+        "/message",
+        "getVisitorConversation",
+        "sendVisitorMessage"
+      ]
+    },
+    {
+      "id": "phase-19-contact-mounted",
+      "desc": "server.js mounts /api/public/contact",
+      "type": "fileContains",
+      "file": "backend/server.js",
+      "patterns": [
+        "publicContactRoutes",
+        "/api/public/contact"
+      ]
+    },
+    {
+      "id": "phase-19-contact-whatsapp-payload",
+      "desc": "Payload exposes profile.user_id, whatsapp_number, whatsapp_link",
+      "type": "fileContains",
+      "file": "backend/templates/portfolio/_payload.js",
+      "patterns": [
+        "user_id: user.id",
+        "whatsapp_number",
+        "whatsapp_link",
+        "wa.me"
+      ]
+    },
+    {
+      "id": "phase-19-contact-require-and-mount",
+      "desc": "server.js requires AND mounts publicContactRoutes (both must exist)",
+      "type": "fileContains",
+      "file": "backend/server.js",
+      "patterns": [
+        "const publicContactRoutes",
+        "app.use(\"/api/public/contact\", publicContactRoutes)"
+      ]
     }
   ]
 }

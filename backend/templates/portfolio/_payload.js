@@ -29,14 +29,18 @@ function buildProfile(user) {
     if (!user) return null;
     const headline = user.primary_profession || user.specialties || null;
     const image = user.profile_image || null;
+    var __waDigits = (user.whatsapp_number || "").replace(/[^0-9]/g, "");
     return {
+        user_id: user.id,
         name: user.display_name || user.username || "Unnamed",
         username: user.username || null,
         headline: headline,
         bio: user.bio || null,
         image: image,
         location: user.location || null,
-        email: user.email || null
+        email: user.email || null,
+        whatsapp_number: user.whatsapp_number || null,
+        whatsapp_link: __waDigits ? ("https://wa.me/" + __waDigits) : null
     };
 }
 
@@ -272,7 +276,7 @@ function build(userId, opts) {
 
     const user = safeGet(
         "SELECT id, username, display_name, email, bio, profile_image, location, " +
-        "primary_profession, specialties FROM users WHERE id = ?",
+        "primary_profession, specialties, whatsapp_number FROM users WHERE id = ?",
         userId
     );
     if (!user) return null;
