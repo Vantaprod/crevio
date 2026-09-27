@@ -16,6 +16,41 @@ const db = require("../../database/db");
 const engine = require("../templates/portfolio/_engine");
 const payloadBuilder = require("../templates/portfolio/_payload");
 const entitlementService = require("../services/entitlementService");
+const crypto = require("crypto");
+
+// ---------- View logging (privacy-friendly) ----------
+// Bots and link-preview scrapers hit /p/:slug to generate
+// preview cards — we must not count those as real views.
+const BOT_REGEX = /bot|crawler|spider|preview|facebookexternalhit|twitterbot|slackbot|whatsapp|telegram|discord|linkedinbot|pinterest|skype|embed|headless/i;
+
+function isBot(ua) {
+    if (!ua) return true;
+    return BOT_REGEX.test(ua);
+}
+
+function hashIp(ip) {
+    const secret = process.env.JWT_SECRET || "crevio-dev-salt";
+    return crypto.createHash("sha256").update(ip + ":" + secret).digest("hex").slice(0, 16);
+}
+
+function logPortfolioView(userId, req) {
+    try {
+        const ua = req.get("user-agent") || "";
+        if (isBot(ua)) return;
+
+        const referrer = (req.get("referer") || "").slice(0, 500) || null;
+        const ip = req.ip || (req.connection && req.connection.remoteAddress) || "";
+        const ipHash = ip ? hashIp(ip) : null;
+        const path = req.path;
+
+        db.prepare(
+            "INSERT INTO portfolio_views (user_id, path, referrer, user_agent, ip_hash) VALUES (?, ?, ?, ?, ?)"
+        ).run(userId, path, referrer, ua.slice(0, 500), ipHash);
+    } catch (e) {
+        // Fire-and-forget — analytics must never break rendering
+        console.warn("[portfolioView] log failed:", e.message);
+    }
+}
 
 const FALLBACK_TEMPLATE = "minimal";
 
@@ -49,6 +84,9 @@ function doRender(req, res, next, mode) {
             user.id
         );
         if (!config || !config.published) return next();
+
+        // Log this view (bot-filtered, IP-hashed, non-blocking)
+        logPortfolioView(user.id, req);
 
         const templateSlug = resolveTemplateSlug(config);
         if (!templateSlug) return next();

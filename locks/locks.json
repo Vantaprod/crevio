@@ -3209,6 +3209,50 @@
       "patterns": [
         "window.__crevioRefreshBadges"
       ]
+    },
+    {
+      "id": "phase-25-views-table",
+      "desc": "portfolio_views table exists with user_id, path, referrer, user_agent, ip_hash",
+      "type": "fileContains",
+      "file": "database/add-portfolio-views.js",
+      "patterns": [
+        "portfolio_views",
+        "ip_hash",
+        "user_agent"
+      ]
+    },
+    {
+      "id": "phase-25-view-logger",
+      "desc": "Render controller logs views with bot filter and IP hashing",
+      "type": "fileContains",
+      "file": "backend/controllers/portfolioRenderController.js",
+      "patterns": [
+        "logPortfolioView",
+        "BOT_REGEX",
+        "hashIp"
+      ]
+    },
+    {
+      "id": "phase-25-analytics-controller",
+      "desc": "Analytics controller returns total, thisWeek, lastWeek, uniqueThisWeek, daily",
+      "type": "fileContains",
+      "file": "backend/controllers/portfolioAnalyticsController.js",
+      "patterns": [
+        "getAnalytics",
+        "uniqueThisWeek",
+        "daily",
+        "datetime('now', '-7 days')"
+      ]
+    },
+    {
+      "id": "phase-25-analytics-route",
+      "desc": "GET /api/portfolio/analytics mounted with auth",
+      "type": "fileContains",
+      "file": "backend/routes/portfolioRoutes.js",
+      "patterns": [
+        "portfolioAnalyticsController",
+        "router.get(\"/analytics\""
+      ]
     }
   ]
 }
