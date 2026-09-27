@@ -3058,6 +3058,91 @@
         "const publicContactRoutes",
         "app.use(\"/api/public/contact\", publicContactRoutes)"
       ]
+    },
+    {
+      "id": "phase-20-contact-js",
+      "desc": "Portfolio contact JS: form submit, chat widget, whatsapp handoff",
+      "type": "fileContains",
+      "file": "dashboard/js/portfolio-contact.js",
+      "patterns": [
+        "crevioContactForm",
+        "/api/public/contact/start",
+        "/api/public/contact/message",
+        "buildWhatsappUrl",
+        "sessionStorage"
+      ]
+    },
+    {
+      "id": "phase-20-contact-minimal",
+      "desc": "Minimal template renders the contact form + continue-chatting panel",
+      "type": "fileContains",
+      "file": "backend/templates/portfolio/minimal/template.html",
+      "patterns": [
+        "crevioContactForm",
+        "crevioContactAfter",
+        "crevioContinueChat",
+        "crevioContinueWhatsapp",
+        "portfolio-contact.js"
+      ]
+    },
+    {
+      "id": "phase-20-contact-cinematic",
+      "desc": "Cinematic template renders the contact form + continue-chatting panel",
+      "type": "fileContains",
+      "file": "backend/templates/portfolio/cinematic/template.html",
+      "patterns": [
+        "crevioContactForm",
+        "crevioContactAfter",
+        "crevioContinueChat",
+        "crevioContinueWhatsapp",
+        "portfolio-contact.js"
+      ]
+    },
+    {
+      "id": "phase-20-contact-editorial",
+      "desc": "Editorial template renders the contact form + continue-chatting panel",
+      "type": "fileContains",
+      "file": "backend/templates/portfolio/editorial/template.html",
+      "patterns": [
+        "crevioContactForm",
+        "crevioContactAfter",
+        "crevioContinueChat",
+        "crevioContinueWhatsapp",
+        "portfolio-contact.js"
+      ]
+    },
+    {
+      "id": "phase-20-contact-css-minimal",
+      "desc": "Minimal contact + chat CSS",
+      "type": "fileContains",
+      "file": "backend/templates/portfolio/minimal/template.css",
+      "patterns": [
+        "Contact form + visitor chat",
+        "crevio-chat-msg",
+        "crevio-contact-submit"
+      ]
+    },
+    {
+      "id": "phase-20-contact-css-cinematic",
+      "desc": "Cinematic contact + chat CSS",
+      "type": "fileContains",
+      "file": "backend/templates/portfolio/cinematic/template.css",
+      "patterns": [
+        "Contact form + visitor chat",
+        "crevio-chat-msg",
+        "crevio-contact-submit"
+      ]
+    },
+    {
+      "id": "phase-20-contact-css-editorial",
+      "desc": "Editorial contact + chat CSS",
+      "type": "fileContains",
+      "file": "backend/templates/portfolio/editorial/template.css",
+      "patterns": [
+        "Contact form + visitor chat",
+        "crevio-chat-msg",
+        "crevio-contact-submit"
+      ]
     }
   ]
 }

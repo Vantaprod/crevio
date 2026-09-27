@@ -116,21 +116,57 @@ body.crevio-portfolio, body.crevio-cinematic, body.crevio-editorial {
   {{/is_testimonials_page}}
 {{/hasTestimonials}}
 
-{{#hasSocial}}
+{{#profile.user_id}}
 <section class="ed-section"{{#effects.fade}} data-fade{{/effects.fade}} id="contact">
   <h2 class="ed-section-title"><span>Get In Touch</span></h2>
-  <ul class="ed-social">
+  {{#profile.user_id}}
+<form class="crevio-contact-form" id="crevioContactForm" data-creator-id="{{ profile.user_id }}" data-whatsapp="{{#profile.whatsapp_link}}{{ profile.whatsapp_link }}{{/profile.whatsapp_link}}" novalidate>
+  <div class="crevio-contact-field">
+    <label for="crevioContactName">Your name</label>
+    <input type="text" id="crevioContactName" name="name" required maxlength="120" placeholder="Jane Doe" autocomplete="name">
+  </div>
+  <div class="crevio-contact-field">
+    <label for="crevioContactEmail">Email</label>
+    <input type="email" id="crevioContactEmail" name="email" required maxlength="200" placeholder="you@example.com" autocomplete="email">
+  </div>
+  <div class="crevio-contact-field">
+    <label for="crevioContactMessage">Message</label>
+    <textarea id="crevioContactMessage" name="message" required maxlength="2000" rows="5" placeholder="What project are you working on?"></textarea>
+  </div>
+  <button type="submit" class="crevio-contact-submit">Send message</button>
+</form>
+
+<div class="crevio-contact-after" id="crevioContactAfter" hidden>
+  <h3>Message sent &check;</h3>
+  <p>Pick how you'd like to continue the conversation.</p>
+  <div class="crevio-contact-after-actions">
+    <button type="button" class="crevio-btn crevio-btn-primary" id="crevioContinueChat">Continue on Crevio Chat</button>
+    <a class="crevio-btn crevio-btn-ghost" id="crevioContinueWhatsapp" href="#" target="_blank" rel="noopener">Continue on WhatsApp</a>
+  </div>
+  <div class="crevio-contact-chat" id="crevioContactChat" hidden>
+    <div class="crevio-chat-header"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:6px;"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Private chat &middot; Only you and the creator can read this</div>
+    <div class="crevio-chat-messages" id="crevioChatMessages"></div>
+    <div class="crevio-chat-input">
+      <input type="text" id="crevioChatInput" placeholder="Type a message..." maxlength="2000" autocomplete="off">
+      <button type="button" id="crevioChatSend">Send</button>
+    </div>
+  </div>
+</div>
+{{/profile.user_id}}
+
+<ul class="ed-social">
     {{#social}}
     <li class="ed-social-item"><a href="{{ url }}" target="_blank" rel="noopener">{{#social_show_icon}}<span class="ed-social-icon">{{{ icon }}}</span>{{/social_show_icon}}{{#social_show_text}}<span class="ed-social-name">{{ platform }}</span>{{/social_show_text}}</a></li>
     {{/social}}
   </ul>
-</section>
-{{/hasSocial}}
+</section></section>
+{{/profile.user_id}}
 
 <footer class="ed-footer">
   <p>Built with <a href="https://crevio.indevs.in">Crevio</a></p>
 </footer>
 
 {{#effects.enabled}}<script src="/dashboard/js/portfolio-effects.js" defer></script>{{/effects.enabled}}
+<script src="/dashboard/js/portfolio-contact.js" defer></script>
 </body>
 </html>
