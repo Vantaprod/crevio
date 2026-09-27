@@ -1,5 +1,5 @@
 // =========================================================
-// CREVIO -- VISITOR CHAT PAGE (v2)
+// CREVIO -- VISITOR CHAT PAGE (v3)
 // File: dashboard/js/visitor-chat.js
 // =========================================================
 (function () {
@@ -8,12 +8,13 @@
     if (!root) return;
     window.__crevioVisitorChat = true;
 
-    var creatorId     = root.dataset.creatorId;
-    var creatorSlug   = root.dataset.creatorSlug || "";
-    var creatorName   = root.dataset.creatorName || "them";
-    var creatorInitial= root.dataset.creatorInitial || "?";
-    var creatorAvatar = root.dataset.creatorAvatar || "";
-    var storageKey    = "crevio_contact_" + creatorId;
+    var creatorId      = root.dataset.creatorId;
+    var creatorSlug    = root.dataset.creatorSlug || "";
+    var creatorName    = root.dataset.creatorName || "them";
+    var creatorInitial = root.dataset.creatorInitial || "?";
+    var creatorAvatar  = root.dataset.creatorAvatar || "";
+    var storageKey     = "crevio_contact_" + creatorId;
+    var EXPIRY_MS      = 30 * 24 * 60 * 60 * 1000;
 
     var msgList  = document.getElementById("vcMessages");
     var emptyEl  = document.getElementById("vcEmpty");
@@ -21,9 +22,8 @@
     var input    = document.getElementById("vcInput");
     var sendBtn  = document.getElementById("vcSend");
     var statusEl = document.getElementById("vcStatus");
-    var footerEl = document.querySelector(".vc-footer");
 
-    var state = { convId: null, email: null, lastCount: -1, timer: null, sending: false, dead: false };
+    var state = { convId: null, email: null, name: null, lastCount: -1, timer: null, sending: false };
 
     function esc(s) {
         return String(s || "").replace(/[&<>"']/g, function (c) {
@@ -31,161 +31,30 @@
         });
     }
 
-    function loadState() {
+    function readStorage() {
         var raw = null;
         try { raw = localStorage.getItem(storageKey); } catch (e) {}
-        if (!raw) {
-            try { raw = sessionStorage.getItem(storageKey); } catch (e) {}
-            if (raw) { try { localStorage.setItem(storageKey, raw); } catch (e) {} }
-        }
-        if (!raw) return false;
+        if (!raw) { try { raw = sessionStorage.getItem(storageKey); } catch (e) {} }
+        if (!raw) return null;
         try {
             var p = JSON.parse(raw);
-            if (!p || !p.convId || !p.email) return false;
-            if (p.savedAt && (Date.now() - p.savedAt) > (30 * 24 * 60 * 60 * 1000)) {
-                try { localStorage.removeItem(storageKey); } catch (e) {}
-                try { sessionStorage.removeItem(storageKey); } catch (e) {}
-                return false;
-            }
-            state.convId = p.convId;
-            state.email = p.email;
-            return true;
-        } catch (e) { return false; }
+            if (!p || !p.email) return null;
+            if (p.savedAt && (Date.now() - p.savedAt) > EXPIRY_MS) return null;
+            return p;
+        } catch (e) { return null; }
+    }
+    function writeStorage() {
+        try {
+            localStorage.setItem(storageKey, JSON.stringify({
+                v: 2, convId: state.convId, email: state.email,
+                name: state.name, savedAt: Date.now()
+            }));
+        } catch (e) {}
     }
 
-    function hideChrome() {
-        if (msgList)  msgList.style.display  = "none";
-        if (inputBar) inputBar.style.display = "none";
-        if (footerEl) footerEl.style.display = "none";
-    }
-
-    function showStatus(title, body, linkHref, linkLabel, actionId) {
-        hideChrome();
-        if (!statusEl) return;
-        statusEl.hidden = false;
-        statusEl.innerHTML =
-            "<h2>" + esc(title) + "</h2><p>" + body +
-            (linkHref ? '<br><br><a href="' + esc(linkHref) + '">' + esc(linkLabel) + "</a>" : "") +
-            (actionId ? '<br><br><button type="button" id="' + actionId + '" style="background:#2563EB;color:#fff;border:none;padding:10px 18px;border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Start a new conversation</button>' : "") +
-            "</p>";
-        if (actionId) {
-        var btn = document.getElementById(actionId);
-        if (btn) btn.addEventListener("click", function () {
-            try { localStorage.removeItem(storageKey); } catch (e) {}
-            try { sessionStorage.removeItem(storageKey); } catch (e) {}
-            state.convId = null;
-            state.email = null;
-            state.dead = false;
-            openNewConversationForm();
-        });
-    }
-    }
-
-    function openNewConversationForm() {
-            if (!msgList) return;
-            if (statusEl) statusEl.hidden = true;
-            if (msgList) msgList.style.display = "";
-            if (inputBar) inputBar.style.display = "none";
-    
-            msgList.innerHTML = [
-                '<div class="vc-new-wrap">',
-                    '<div class="vc-new-form">',
-                        '<h2>Start a new conversation</h2>',
-                        '<p class="vc-new-lead">Send ' + esc(creatorName) + ' a fresh message. Your previous chat will remain in their inbox.</p>',
-                        '<input type="text" id="vcNewName" placeholder="Your name" maxlength="120" autocomplete="name">',
-                        '<input type="email" id="vcNewEmail" placeholder="you@example.com" maxlength="200" autocomplete="email">',
-                        '<textarea id="vcNewMsg" placeholder="What would you like to say?" maxlength="2000"></textarea>',
-                        '<div class="vc-new-actions">',
-                            '<button type="button" class="vc-new-cancel" id="vcNewCancel">Cancel</button>',
-                            '<button type="button" class="vc-new-send" id="vcNewSend">Send message</button>',
-                        '</div>',
-                        '<div class="vc-new-err" id="vcNewErr" hidden></div>',
-                    '</div>',
-                '</div>'
-            ].join("");
-    
-            var nameEl  = document.getElementById("vcNewName");
-            var emailEl = document.getElementById("vcNewEmail");
-            var msgEl   = document.getElementById("vcNewMsg");
-            var sendEl  = document.getElementById("vcNewSend");
-            var cnlEl   = document.getElementById("vcNewCancel");
-            var errEl   = document.getElementById("vcNewErr");
-    
-            if (state.email && emailEl) emailEl.value = state.email;
-    
-            function showErr(msg) {
-                if (!errEl) return;
-                errEl.hidden = false;
-                errEl.textContent = msg;
-            }
-    
-            if (cnlEl) cnlEl.addEventListener("click", function () {
-                showStatus(
-                    "This chat is no longer available",
-                    "The conversation may have been cleared.",
-                    "/p/" + encodeURIComponent(creatorSlug),
-                    "Back to portfolio \u2192",
-                    "vcStartOver"
-                );
-            });
-    
-            if (sendEl) sendEl.addEventListener("click", function () {
-                var n = (nameEl.value || "").trim();
-                var e = (emailEl.value || "").trim();
-                var m = (msgEl.value || "").trim();
-                if (!n || !e || !m) { showErr("Please fill in all three fields."); return; }
-                sendEl.disabled = true;
-                sendEl.textContent = "Sending...";
-                if (errEl) errEl.hidden = true;
-    
-                fetch("/api/public/contact/start", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        creator_id: parseInt(creatorId, 10),
-                        client_name: n,
-                        client_email: e,
-                        message: m,
-                        source: "portfolio"
-                    })
-                })
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    if (!data.success) throw new Error(data.message || "Send failed");
-                    state.convId  = data.conversation_id;
-                    state.email   = e;
-                    state.lastCount = -1;
-                    state.dead    = false;
-                    try {
-                        localStorage.setItem(storageKey, JSON.stringify({
-                            v: 2, convId: state.convId, email: state.email, savedAt: Date.now()
-                        }));
-                    } catch (ex) {}
-    
-                    // Bring the chat chrome back and load the new thread
-                    if (inputBar) inputBar.style.display = "";
-                    if (statusEl) statusEl.hidden = true;
-                    msgList.innerHTML = "";
-                    if (emptyEl) msgList.appendChild(emptyEl);
-                    fetchMsgs();
-                    if (state.timer) clearInterval(state.timer);
-                    state.timer = setInterval(fetchMsgs, 4000);
-                    if (input) setTimeout(function () { input.focus(); }, 80);
-                })
-                .catch(function (err) {
-                    sendEl.disabled = false;
-                    sendEl.textContent = "Send message";
-                    showErr(err.message);
-                });
-            });
-    
-            if (nameEl) setTimeout(function () { nameEl.focus(); }, 60);
-        }
-    
-        function timeLabel(iso) {
+    function timeLabel(iso) {
         if (!iso) return "";
-        var d;
-        try { d = new Date(iso); } catch (e) { return ""; }
+        var d; try { d = new Date(iso); } catch (e) { return ""; }
         if (!d || isNaN(d.getTime())) return "";
         var now = new Date();
         var sameDay = d.toDateString() === now.toDateString();
@@ -271,24 +140,21 @@
         }
     }
 
-    function markDead() {
-        state.dead = true;
-        if (state.timer) { clearInterval(state.timer); state.timer = null; }
-        showStatus(
-            "This chat is no longer available",
-            "The conversation may have been cleared. Start a new one from the portfolio.",
-            "/p/" + encodeURIComponent(creatorSlug),
-            "Back to portfolio \u2192",
-            "vcStartOver"
-        );
-    }
-
     function fetchMsgs(cb) {
-        if (!state.convId || !state.email || state.dead) { if (cb) cb(); return; }
+        if (!state.convId || !state.email) { if (cb) cb(); return; }
         fetch("/api/public/contact/" + state.convId + "?email=" + encodeURIComponent(state.email), { cache: "no-store" })
             .then(function (r) { return r.json(); })
             .then(function (data) {
-                if (!data.success) { markDead(); return; }
+                if (!data.success) {
+                    // Conversation is gone server-side. Drop the pointer
+                    // silently; the visitor just sees an empty chat again.
+                    state.convId = null;
+                    state.lastCount = -1;
+                    writeStorage();
+                    renderAll([]);
+                    if (cb) cb();
+                    return;
+                }
                 var msgs = data.messages || [];
                 if (state.lastCount === -1 || msgs.length !== state.lastCount) {
                     var stick = nearBottom();
@@ -301,20 +167,24 @@
             .catch(function () { if (cb) cb(); });
     }
 
+    function startPolling() {
+        if (state.timer) return;
+        state.timer = setInterval(fetchMsgs, 4000);
+    }
+
     function autoGrow() {
         if (!input) return;
         input.style.height = "auto";
         input.style.height = Math.min(input.scrollHeight, 120) + "px";
     }
-
     function updateSendState() {
         if (!sendBtn) return;
         var empty = !(input.value || "").trim();
-        sendBtn.disabled = empty || state.sending || state.dead;
+        sendBtn.disabled = empty || state.sending;
     }
 
     function sendMsg() {
-        if (state.sending || state.dead) return;
+        if (state.sending) return;
         var text = (input.value || "").trim();
         if (!text) return;
         state.sending = true;
@@ -325,58 +195,155 @@
         if (emptyEl && emptyEl.parentNode === msgList) msgList.removeChild(emptyEl);
         msgList.appendChild(temp);
         if (stick) scrollToBottom();
+        input.value = ""; autoGrow();
 
-        input.value = "";
-        autoGrow();
+        var req;
+        if (!state.convId) {
+            // No live conversation yet -- create one with this first message.
+            req = fetch("/api/public/contact/start", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    creator_id: parseInt(creatorId, 10),
+                    client_name: state.name || "Visitor",
+                    client_email: state.email,
+                    message: text,
+                    source: "portfolio"
+                })
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (!data.success) throw new Error(data.message || "Send failed");
+                state.convId = data.conversation_id;
+                writeStorage();
+                state.lastCount = -1;
+                fetchMsgs();
+                startPolling();
+            });
+        } else {
+            req = fetch("/api/public/contact/message", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ conversation_id: state.convId, email: state.email, message: text })
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (!data.success) throw new Error(data.message || "Send failed");
+                state.lastCount = -1;
+                fetchMsgs();
+            });
+        }
 
-        fetch("/api/public/contact/message", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ conversation_id: state.convId, email: state.email, message: text })
-        })
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-            if (!data.success) throw new Error(data.message || "Send failed");
-            state.sending = false;
-            state.lastCount = -1;
-            fetchMsgs();
-        })
-        .catch(function (err) {
-            state.sending = false;
-            var b = temp.querySelector(".vc-bubble");
-            if (b) { b.classList.remove("sending"); b.classList.add("failed"); }
-            alert("Could not send: " + err.message);
-            if (!input.value) input.value = text;
-            autoGrow();
-        })
-        .then(function () {
-            state.sending = false;
-            updateSendState();
-            if (input) input.focus();
-        });
+        req
+            .catch(function (err) {
+                var b = temp.querySelector(".vc-bubble");
+                if (b) { b.classList.remove("sending"); b.classList.add("failed"); }
+                alert("Could not send: " + err.message);
+                if (!input.value) input.value = text;
+                autoGrow();
+            })
+            .then(function () {
+                state.sending = false;
+                updateSendState();
+                if (input) input.focus();
+            });
     }
 
-    if (!loadState()) {
-        showStatus(
-            "Chat session not found",
-            "Start a conversation with " + esc(creatorName) + " below.",
-            "/p/" + encodeURIComponent(creatorSlug),
-            "Back to portfolio \u2192",
-            "vcStartOver"
-        );
+    // ---- Inline form: ONLY for visitors with no known email at all ----
+    function openInlineForm() {
+        if (statusEl) { statusEl.hidden = true; statusEl.innerHTML = ""; }
+        if (inputBar) inputBar.style.display = "none";
+        msgList.style.display = "";
+        msgList.innerHTML = [
+            '<div class="vc-new-wrap">',
+                '<div class="vc-new-form">',
+                    '<h2>Message ' + esc(creatorName) + '</h2>',
+                    '<p class="vc-new-lead">Send a message to start the conversation.</p>',
+                    '<input type="text" id="vcNewName" placeholder="Your name" maxlength="120" autocomplete="name">',
+                    '<input type="email" id="vcNewEmail" placeholder="you@example.com" maxlength="200" autocomplete="email">',
+                    '<textarea id="vcNewMsg" placeholder="What would you like to say?" maxlength="2000"></textarea>',
+                    '<div class="vc-new-actions">',
+                        '<button type="button" class="vc-new-send" id="vcNewSend">Send message</button>',
+                    '</div>',
+                    '<div class="vc-new-err" id="vcNewErr" hidden></div>',
+                '</div>',
+            '</div>'
+        ].join("");
+
+        var nameEl  = document.getElementById("vcNewName");
+        var emailEl = document.getElementById("vcNewEmail");
+        var msgEl   = document.getElementById("vcNewMsg");
+        var sendEl  = document.getElementById("vcNewSend");
+        var errEl   = document.getElementById("vcNewErr");
+
+        if (sendEl) sendEl.addEventListener("click", function () {
+            var n = (nameEl.value || "").trim();
+            var e = (emailEl.value || "").trim();
+            var m = (msgEl.value || "").trim();
+            if (!n || !e || !m) { if (errEl) { errEl.hidden = false; errEl.textContent = "Please fill in all fields."; } return; }
+            sendEl.disabled = true;
+            sendEl.textContent = "Sending...";
+            if (errEl) errEl.hidden = true;
+            fetch("/api/public/contact/start", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    creator_id: parseInt(creatorId, 10),
+                    client_name: n, client_email: e, message: m, source: "portfolio"
+                })
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (!data.success) throw new Error(data.message || "Send failed");
+                state.convId = data.conversation_id;
+                state.email = e;
+                state.name = n;
+                writeStorage();
+                state.lastCount = -1;
+                if (inputBar) inputBar.style.display = "";
+                renderAll([]);
+                fetchMsgs();
+                startPolling();
+                if (input) setTimeout(function () { input.focus(); }, 80);
+            })
+            .catch(function (err) {
+                sendEl.disabled = false;
+                sendEl.textContent = "Send message";
+                if (errEl) { errEl.hidden = false; errEl.textContent = err.message; }
+            });
+        });
+
+        if (nameEl) setTimeout(function () { nameEl.focus(); }, 60);
+    }
+
+    // ---- Init ----
+    var stored = readStorage();
+    if (stored) {
+        state.email = stored.email;
+        state.name  = stored.name || null;
+        state.convId = stored.convId || null;
+    }
+
+    if (!state.email) {
+        // Truly unknown visitor -- ask for details once.
+        openInlineForm();
         return;
     }
 
-    fetchMsgs();
-    state.timer = setInterval(fetchMsgs, 4000);
+    // Known visitor: always show the chat with input ready.
+    if (statusEl) statusEl.hidden = true;
+    if (inputBar) inputBar.style.display = "";
+    renderAll([]);
+
+    if (state.convId) {
+        fetchMsgs();
+        startPolling();
+    }
 
     if (input) {
         input.addEventListener("input", function () { autoGrow(); updateSendState(); });
         input.addEventListener("keydown", function (e) {
-            if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                sendMsg();
-            }
+            if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(); }
         });
         setTimeout(function () { input.focus(); autoGrow(); updateSendState(); }, 80);
     }

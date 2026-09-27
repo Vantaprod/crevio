@@ -3448,6 +3448,29 @@
         "localStorage.getItem(storageKey)",
         "30 * 24 * 60 * 60 * 1000"
       ]
+    },
+    {
+      "id": "phase-29-visitor-chat-v3",
+      "desc": "Chat page never shows a dead state to a visitor with a stored email; first send silently creates the convo",
+      "type": "fileContains",
+      "file": "dashboard/js/visitor-chat.js",
+      "patterns": [
+        "v3",
+        "openInlineForm",
+        "no live conversation yet -- create one with this first message",
+        "state.name || \"Visitor\""
+      ]
+    },
+    {
+      "id": "phase-29-contact-saves-name",
+      "desc": "Contact form persists the visitor name for later use on the chat page",
+      "type": "fileContains",
+      "file": "dashboard/js/portfolio-contact.js",
+      "patterns": [
+        "state.name = name",
+        "name: state.name",
+        "state.name = persisted.name"
+      ]
     }
   ]
 }

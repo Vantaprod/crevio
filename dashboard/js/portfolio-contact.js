@@ -25,7 +25,7 @@
     var chatInput        = document.getElementById("crevioChatInput");
     var chatSend         = document.getElementById("crevioChatSend");
 
-    var state = { convId: null, email: null, pollTimer: null, lastCount: 0 };
+    var state = { convId: null, email: null, name: null, pollTimer: null, lastCount: 0 };
 
     // ---------- Persistent storage ----------
     function readSession() {
@@ -55,6 +55,7 @@
             v: STORAGE_VERSION,
             convId: state.convId,
             email: state.email,
+            name: state.name,
             savedAt: Date.now()
         });
         try { localStorage.setItem(storageKey, payload); }
@@ -183,6 +184,7 @@
             if (!data.success) throw new Error(data.message || "Failed to send");
             state.convId = data.conversation_id;
             state.email = email;
+            state.name = name;
             state.lastCount = 1;
             saveSession();
             showAfter("Message sent \u2713");
@@ -249,6 +251,7 @@
     if (persisted) {
         state.convId = persisted.convId;
         state.email = persisted.email;
+        state.name = persisted.name || null;
         showAfter("You have an open conversation");
         injectNotYouLink();
         if (continueWhatsapp) continueWhatsapp.href = buildWhatsappUrl();

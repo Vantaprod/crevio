@@ -51,7 +51,8 @@ body { font-family:Inter,system-ui,-apple-system,sans-serif; background:var(--bg
 .vc-send:active:not(:disabled) { transform:scale(0.96); }
 .vc-send:disabled { opacity:0.4; cursor:not-allowed; }
 .vc-send svg { width:18px; height:18px; }
-.vc-status { padding:60px 24px; text-align:center; font-size:14px; color:var(--muted); line-height:1.7; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.vc-status[hidden] { display: none !important; }
+        .vc-status { padding:60px 24px; text-align:center; font-size:14px; color:var(--muted); line-height:1.7; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; }
 .vc-status h2 { font-size:18px; color:var(--fg); margin-bottom:8px; font-weight:600; }
 .vc-status a { color:var(--accent); text-decoration:none; font-weight:600; }
 .vc-status a:hover { text-decoration:underline; }
@@ -108,6 +109,6 @@ body { font-family:Inter,system-ui,-apple-system,sans-serif; background:var(--bg
   <div class="vc-status" id="vcStatus" hidden></div>
   <div class="vc-footer">Built with <a href="https://crevio.indevs.in" target="_blank" rel="noopener">Crevio</a></div>
 </div>
-<script src="/dashboard/js/visitor-chat.js?v=2" defer></script>
+<script src="/dashboard/js/visitor-chat.js?v=3" defer></script>
 </body>
 </html>
