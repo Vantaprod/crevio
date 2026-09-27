@@ -3181,6 +3181,16 @@
       "patterns": [
         "You have a new message from"
       ]
+    },
+    {
+      "id": "phase-23-tick-colors",
+      "desc": "Message ticks use 3 distinct states: sent=faded, delivered=white, read=Crevio green",
+      "type": "fileContains",
+      "file": "dashboard/pages/messages.html",
+      "patterns": [
+        "msg-check.read { color:#22C55E",
+        "msg-check.sent { color:rgba(255,255,255,0.45)"
+      ]
     }
   ]
 }
