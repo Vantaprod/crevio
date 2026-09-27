@@ -123,6 +123,12 @@ app.get(
     }
 );
 
+// Phase 29 -- standalone visitor chat page
+app.get(
+    "/p/:slug/chat",
+    require("./controllers/portfolioRenderController").renderVisitorChat
+);
+
 app.get(
     "/p/:slug",
     require("./controllers/portfolioRenderController").renderPublicPortfolio,

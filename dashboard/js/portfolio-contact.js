@@ -143,8 +143,16 @@
 
     if (continueCrevio) {
         continueCrevio.addEventListener("click", function () {
-            openChat();
-            continueCrevio.disabled = true;
+            // Phase 29: navigate to standalone chat page
+            var slugMatch = location.pathname.match(/^\/p\/([^\/]+)/);
+            if (slugMatch) {
+                continueCrevio.disabled = true;
+                location.href = "/p/" + encodeURIComponent(slugMatch[1]) + "/chat";
+            } else {
+                // Fallback: no slug in URL -> keep the inline panel
+                openChat();
+                continueCrevio.disabled = true;
+            }
         });
     }
 
