@@ -69,15 +69,120 @@
             (actionId ? '<br><br><button type="button" id="' + actionId + '" style="background:#2563EB;color:#fff;border:none;padding:10px 18px;border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Start a new conversation</button>' : "") +
             "</p>";
         if (actionId) {
-            var btn = document.getElementById(actionId);
-            if (btn) btn.addEventListener("click", function () {
-                try { sessionStorage.removeItem(storageKey); } catch (e) {}
-                location.href = "/p/" + encodeURIComponent(creatorSlug);
-            });
-        }
+        var btn = document.getElementById(actionId);
+        if (btn) btn.addEventListener("click", function () {
+            try { localStorage.removeItem(storageKey); } catch (e) {}
+            try { sessionStorage.removeItem(storageKey); } catch (e) {}
+            state.convId = null;
+            state.email = null;
+            state.dead = false;
+            openNewConversationForm();
+        });
+    }
     }
 
-    function timeLabel(iso) {
+    function openNewConversationForm() {
+            if (!msgList) return;
+            if (statusEl) statusEl.hidden = true;
+            if (msgList) msgList.style.display = "";
+            if (inputBar) inputBar.style.display = "none";
+    
+            msgList.innerHTML = [
+                '<div class="vc-new-wrap">',
+                    '<div class="vc-new-form">',
+                        '<h2>Start a new conversation</h2>',
+                        '<p class="vc-new-lead">Send ' + esc(creatorName) + ' a fresh message. Your previous chat will remain in their inbox.</p>',
+                        '<input type="text" id="vcNewName" placeholder="Your name" maxlength="120" autocomplete="name">',
+                        '<input type="email" id="vcNewEmail" placeholder="you@example.com" maxlength="200" autocomplete="email">',
+                        '<textarea id="vcNewMsg" placeholder="What would you like to say?" maxlength="2000"></textarea>',
+                        '<div class="vc-new-actions">',
+                            '<button type="button" class="vc-new-cancel" id="vcNewCancel">Cancel</button>',
+                            '<button type="button" class="vc-new-send" id="vcNewSend">Send message</button>',
+                        '</div>',
+                        '<div class="vc-new-err" id="vcNewErr" hidden></div>',
+                    '</div>',
+                '</div>'
+            ].join("");
+    
+            var nameEl  = document.getElementById("vcNewName");
+            var emailEl = document.getElementById("vcNewEmail");
+            var msgEl   = document.getElementById("vcNewMsg");
+            var sendEl  = document.getElementById("vcNewSend");
+            var cnlEl   = document.getElementById("vcNewCancel");
+            var errEl   = document.getElementById("vcNewErr");
+    
+            if (state.email && emailEl) emailEl.value = state.email;
+    
+            function showErr(msg) {
+                if (!errEl) return;
+                errEl.hidden = false;
+                errEl.textContent = msg;
+            }
+    
+            if (cnlEl) cnlEl.addEventListener("click", function () {
+                showStatus(
+                    "This chat is no longer available",
+                    "The conversation may have been cleared.",
+                    "/p/" + encodeURIComponent(creatorSlug),
+                    "Back to portfolio \u2192",
+                    "vcStartOver"
+                );
+            });
+    
+            if (sendEl) sendEl.addEventListener("click", function () {
+                var n = (nameEl.value || "").trim();
+                var e = (emailEl.value || "").trim();
+                var m = (msgEl.value || "").trim();
+                if (!n || !e || !m) { showErr("Please fill in all three fields."); return; }
+                sendEl.disabled = true;
+                sendEl.textContent = "Sending...";
+                if (errEl) errEl.hidden = true;
+    
+                fetch("/api/public/contact/start", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        creator_id: parseInt(creatorId, 10),
+                        client_name: n,
+                        client_email: e,
+                        message: m,
+                        source: "portfolio"
+                    })
+                })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (!data.success) throw new Error(data.message || "Send failed");
+                    state.convId  = data.conversation_id;
+                    state.email   = e;
+                    state.lastCount = -1;
+                    state.dead    = false;
+                    try {
+                        localStorage.setItem(storageKey, JSON.stringify({
+                            v: 2, convId: state.convId, email: state.email, savedAt: Date.now()
+                        }));
+                    } catch (ex) {}
+    
+                    // Bring the chat chrome back and load the new thread
+                    if (inputBar) inputBar.style.display = "";
+                    if (statusEl) statusEl.hidden = true;
+                    msgList.innerHTML = "";
+                    if (emptyEl) msgList.appendChild(emptyEl);
+                    fetchMsgs();
+                    if (state.timer) clearInterval(state.timer);
+                    state.timer = setInterval(fetchMsgs, 4000);
+                    if (input) setTimeout(function () { input.focus(); }, 80);
+                })
+                .catch(function (err) {
+                    sendEl.disabled = false;
+                    sendEl.textContent = "Send message";
+                    showErr(err.message);
+                });
+            });
+    
+            if (nameEl) setTimeout(function () { nameEl.focus(); }, 60);
+        }
+    
+        function timeLabel(iso) {
         if (!iso) return "";
         var d;
         try { d = new Date(iso); } catch (e) { return ""; }
@@ -254,9 +359,10 @@
     if (!loadState()) {
         showStatus(
             "Chat session not found",
-            "Start a conversation from the portfolio first, then come back here.",
+            "Start a conversation with " + esc(creatorName) + " below.",
             "/p/" + encodeURIComponent(creatorSlug),
-            "Back to portfolio \u2192"
+            "Back to portfolio \u2192",
+            "vcStartOver"
         );
         return;
     }
