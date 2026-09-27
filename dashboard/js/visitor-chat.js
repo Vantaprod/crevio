@@ -32,17 +32,25 @@
     }
 
     function loadState() {
+        var raw = null;
+        try { raw = localStorage.getItem(storageKey); } catch (e) {}
+        if (!raw) {
+            try { raw = sessionStorage.getItem(storageKey); } catch (e) {}
+            if (raw) { try { localStorage.setItem(storageKey, raw); } catch (e) {} }
+        }
+        if (!raw) return false;
         try {
-            var raw = sessionStorage.getItem(storageKey);
-            if (!raw) return false;
             var p = JSON.parse(raw);
-            if (p && p.convId && p.email) {
-                state.convId = p.convId;
-                state.email = p.email;
-                return true;
+            if (!p || !p.convId || !p.email) return false;
+            if (p.savedAt && (Date.now() - p.savedAt) > (30 * 24 * 60 * 60 * 1000)) {
+                try { localStorage.removeItem(storageKey); } catch (e) {}
+                try { sessionStorage.removeItem(storageKey); } catch (e) {}
+                return false;
             }
-        } catch (e) {}
-        return false;
+            state.convId = p.convId;
+            state.email = p.email;
+            return true;
+        } catch (e) { return false; }
     }
 
     function hideChrome() {

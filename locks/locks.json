@@ -3424,6 +3424,30 @@
         "Phase 29: navigate to standalone chat page",
         "/chat"
       ]
+    },
+    {
+      "id": "phase-29-visitor-persistent-session",
+      "desc": "Contact form persists visitor session to localStorage with 30-day expiry",
+      "type": "fileContains",
+      "file": "dashboard/js/portfolio-contact.js",
+      "patterns": [
+        "readSession",
+        "saveSession",
+        "savedAt: Date.now()",
+        "EXPIRY_MS",
+        "injectNotYouLink",
+        "You have an open conversation"
+      ]
+    },
+    {
+      "id": "phase-29-visitor-chat-persistent",
+      "desc": "Visitor chat page reads the persistent localStorage session",
+      "type": "fileContains",
+      "file": "dashboard/js/visitor-chat.js",
+      "patterns": [
+        "localStorage.getItem(storageKey)",
+        "30 * 24 * 60 * 60 * 1000"
+      ]
     }
   ]
 }
