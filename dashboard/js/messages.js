@@ -195,7 +195,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!item) return;
             if (item.dataset.suppressClick === "1") { item.dataset.suppressClick = "0"; return; }
             const id = parseInt(item.dataset.id, 10);
-            if (!isNaN(id)) openConversation(id);
+            if (!isNaN(id)) { openConversation(id); setTimeout(function () { if (typeof window.__crevioRefreshBadges === "function") window.__crevioRefreshBadges(); }, 700); }
         });
         convItemsEl.addEventListener("contextmenu", (e) => {
             const item = e.target.closest(".conv-item");
@@ -1076,7 +1076,7 @@ document.addEventListener("DOMContentLoaded", function () {
         contextContentEl.querySelectorAll(".ctx-related").forEach(function (btn) {
             btn.addEventListener("click", function () {
                 const id = parseInt(btn.dataset.relatedId, 10);
-                if (!isNaN(id)) openConversation(id);
+                if (!isNaN(id)) { openConversation(id); setTimeout(function () { if (typeof window.__crevioRefreshBadges === "function") window.__crevioRefreshBadges(); }, 700); }
             });
         });
 

@@ -3191,6 +3191,24 @@
         "msg-check.read { color:#22C55E",
         "msg-check.sent { color:rgba(255,255,255,0.45)"
       ]
+    },
+    {
+      "id": "phase-24-badge-refresh-messages",
+      "desc": "Messages page calls __crevioRefreshBadges after opening a conversation",
+      "type": "fileContains",
+      "file": "dashboard/js/messages.js",
+      "patterns": [
+        "window.__crevioRefreshBadges"
+      ]
+    },
+    {
+      "id": "phase-24-badge-refresh-notifications",
+      "desc": "Notifications page calls __crevioRefreshBadges after markRead / markAllRead",
+      "type": "fileContains",
+      "file": "dashboard/js/notifications.js",
+      "patterns": [
+        "window.__crevioRefreshBadges"
+      ]
     }
   ]
 }

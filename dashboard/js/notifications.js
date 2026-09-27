@@ -344,6 +344,7 @@ document.addEventListener("DOMContentLoaded", function () {
             await window.apiFetch(`/api/notifications/${id}/read`, { method: "PATCH" });
             n.is_read = 1;
             render();
+            if (typeof window.__crevioRefreshBadges === "function") window.__crevioRefreshBadges();
         } catch (err) { console.error("Mark read error:", err); }
     }
 
@@ -369,6 +370,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const data = await res.json();
             if (data.success) {
                 notifications.forEach(n => n.is_read = 1);
+                if (typeof window.__crevioRefreshBadges === "function") window.__crevioRefreshBadges();
                 render();
                 showToast("All marked as read");
             }
