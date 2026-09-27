@@ -3368,6 +3368,62 @@
         "/api/portfolio/ai/suggest-taglines",
         "/api/portfolio/ai/rewrite-description"
       ]
+    },
+    {
+      "id": "phase-29-visitor-chat-route",
+      "desc": "Public route /p/:slug/chat serves the standalone visitor chat page",
+      "type": "fileContains",
+      "file": "backend/server.js",
+      "patterns": [
+        "\"/p/:slug/chat\"",
+        "renderVisitorChat"
+      ]
+    },
+    {
+      "id": "phase-29-visitor-chat-controller",
+      "desc": "portfolioRenderController exposes renderVisitorChat using renderString",
+      "type": "fileContains",
+      "file": "backend/controllers/portfolioRenderController.js",
+      "patterns": [
+        "renderVisitorChat",
+        "loadChatTemplate",
+        "visitor-chat.html",
+        "engine.renderString"
+      ]
+    },
+    {
+      "id": "phase-29-visitor-chat-template",
+      "desc": "Standalone visitor chat HTML template with Crevio design",
+      "type": "fileContains",
+      "file": "backend/templates/visitor-chat.html",
+      "patterns": [
+        "vcMessages",
+        "vcSend",
+        "vc-input-bar",
+        "visitor-chat.js"
+      ]
+    },
+    {
+      "id": "phase-29-visitor-chat-js",
+      "desc": "Visitor chat JS wires the two public contact endpoints + polling",
+      "type": "fileContains",
+      "file": "dashboard/js/visitor-chat.js",
+      "patterns": [
+        "__crevioVisitorChat",
+        "crevio_contact_",
+        "/api/public/contact/",
+        "/api/public/contact/message"
+      ]
+    },
+    {
+      "id": "phase-29-contact-nav-to-chat",
+      "desc": "Contact form Continue on Crevio Chat navigates to the standalone chat",
+      "type": "fileContains",
+      "file": "dashboard/js/portfolio-contact.js",
+      "patterns": [
+        "Phase 29: navigate to standalone chat page",
+        "/chat"
+      ]
     }
   ]
 }

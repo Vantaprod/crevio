@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ meta.title }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root { --accent:#2563EB; --bg:#F1F5F9; --surface:#FFFFFF; --fg:#0F172A; --muted:#475569; --border:#E2E8F0; --bubble-out:#2563EB; --bubble-in:#F1F5F9; }
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; }
+body { font-family:Inter,system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--fg); display:flex; min-height:100vh; }
+.vc-shell { max-width:720px; width:100%; margin:0 auto; display:flex; flex-direction:column; height:100vh; background:var(--surface); box-shadow:0 0 0 1px var(--border); }
+.vc-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; background:var(--surface); }
+.vc-avatar { width:40px; height:40px; border-radius:50%; object-fit:cover; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; flex-shrink:0; }
+.vc-id { min-width:0; }
+.vc-name { font-size:15px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.vc-sub { font-size:12px; color:var(--muted); }
+.vc-lock { margin-left:auto; display:inline-flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); max-width:40%; text-align:right; }
+.vc-lock svg { width:12px; height:12px; flex-shrink:0; }
+.vc-messages { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:8px; background:var(--bg); }
+.vc-bubble { max-width:75%; padding:10px 14px; border-radius:16px; font-size:14px; line-height:1.45; word-wrap:break-word; white-space:pre-wrap; }
+.vc-in { align-self:flex-start; background:var(--surface); border:1px solid var(--border); border-bottom-left-radius:6px; }
+.vc-out { align-self:flex-end; background:var(--bubble-out); color:#fff; border-bottom-right-radius:6px; }
+.vc-input-bar { padding:14px 20px; border-top:1px solid var(--border); display:flex; gap:10px; align-items:flex-end; background:var(--surface); }
+.vc-input-bar input { flex:1; background:var(--bg); border:1px solid var(--border); color:var(--fg); padding:12px 14px; border-radius:10px; font-size:14px; font-family:inherit; }
+.vc-input-bar input:focus { outline:none; border-color:var(--accent); }
+.vc-send { background:var(--accent); color:#fff; border:none; padding:12px 22px; border-radius:10px; font-size:14px; font-weight:600; font-family:inherit; cursor:pointer; transition:opacity 0.15s; }
+.vc-send:hover { opacity:0.9; }
+.vc-send:disabled { opacity:0.5; cursor:not-allowed; }
+.vc-status { padding:40px 20px; text-align:center; font-size:14px; color:var(--muted); line-height:1.6; }
+.vc-status a { color:var(--accent); text-decoration:none; font-weight:600; }
+.vc-status a:hover { text-decoration:underline; }
+.vc-footer { padding:10px 20px; text-align:center; font-size:11px; color:var(--muted); border-top:1px solid var(--border); background:var(--surface); }
+.vc-footer a { color:var(--accent); text-decoration:none; }
+</style>
+</head>
+<body>
+<div class="vc-shell" id="vcRoot" data-creator-id="{{ creator.id }}" data-creator-slug="{{ creator.slug }}">
+  <header class="vc-header">
+    {{#creator.has_avatar}}<img class="vc-avatar" src="{{ creator.avatar }}" alt="{{ creator.name }}">{{/creator.has_avatar}}
+    {{#creator.show_initial}}<div class="vc-avatar">{{ creator.initial }}</div>{{/creator.show_initial}}
+    <div class="vc-id">
+      <div class="vc-name">{{ creator.name }}</div>
+      <div class="vc-sub">Private chat</div>
+    </div>
+    <div class="vc-lock">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      <span>Only you and {{ creator.name }} can read this</span>
+    </div>
+  </header>
+  <main class="vc-messages" id="vcMessages"></main>
+  <footer class="vc-input-bar" id="vcInputBar">
+    <input type="text" id="vcInput" placeholder="Type a message..." maxlength="2000" autocomplete="off">
+    <button type="button" class="vc-send" id="vcSend">Send</button>
+  </footer>
+  <div class="vc-status" id="vcStatus" hidden></div>
+  <div class="vc-footer">Built with <a href="https://crevio.indevs.in" target="_blank" rel="noopener">Crevio</a></div>
+</div>
+<script src="/dashboard/js/visitor-chat.js" defer></script>
+</body>
+</html>

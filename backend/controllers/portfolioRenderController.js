@@ -17,6 +17,8 @@ const engine = require("../templates/portfolio/_engine");
 const payloadBuilder = require("../templates/portfolio/_payload");
 const entitlementService = require("../services/entitlementService");
 const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
 
 // ---------- View logging (privacy-friendly) ----------
 // Bots and link-preview scrapers hit /p/:slug to generate
@@ -141,3 +143,88 @@ function doRender(req, res, next, mode) {
 
 exports.renderPublicPortfolio = (req, res, next) => doRender(req, res, next, "portfolio");
 exports.renderTestimonialsPage = (req, res, next) => doRender(req, res, next, "testimonials");
+// =========================================================
+// GET /p/:slug/chat -- standalone visitor chat page
+// Uses a shared template outside the picker registry so it
+// never appears as a selectable portfolio template.
+// =========================================================
+const CHAT_TEMPLATE_PATH = path.join(__dirname, "..", "templates", "visitor-chat.html");
+let _chatTemplateCache = null;
+let _chatTemplateCachedAt = 0;
+const CHAT_TEMPLATE_TTL_MS = 60 * 1000;
+
+function loadChatTemplate() {
+    if (_chatTemplateCache && (Date.now() - _chatTemplateCachedAt) < CHAT_TEMPLATE_TTL_MS) {
+        return _chatTemplateCache;
+    }
+    try {
+        _chatTemplateCache = fs.readFileSync(CHAT_TEMPLATE_PATH, "utf8");
+        _chatTemplateCachedAt = Date.now();
+        return _chatTemplateCache;
+    } catch (e) {
+        console.warn("[visitorChat] template read failed:", e.message);
+        return null;
+    }
+}
+
+function chatErrorHtml(msg) {
+    return "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>Crevio chat</title>" +
+        "<style>body{font-family:Inter,system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#F1F5F9;color:#0F172A;text-align:center;padding:24px}" +
+        "a{color:#2563EB;text-decoration:none;font-weight:600}a:hover{text-decoration:underline}</style></head><body>" +
+        "<div><h2 style=\"margin:0 0 8px\">" + engine.escapeHtml(msg) + "</h2>" +
+        "<p style=\"color:#475569;margin:8px 0 20px\">The chat link may have expired.</p>" +
+        "<a href=\"/\">Go to Crevio &rarr;</a></div></body></html>";
+}
+
+exports.renderVisitorChat = (req, res) => {
+    try {
+        const slug = req.params.slug;
+        if (!slug) return res.status(404).send(chatErrorHtml("Chat not found"));
+
+        const user = safeGet(
+            "SELECT id, username, display_name, profile_image FROM users WHERE LOWER(username) = LOWER(?)",
+            slug
+        );
+        if (!user) return res.status(404).send(chatErrorHtml("Creator not found"));
+
+        const config = safeGet(
+            "SELECT * FROM portfolio_config WHERE user_id = ? LIMIT 1",
+            user.id
+        );
+        if (!config || !config.published) {
+            return res.status(404).send(chatErrorHtml("Portfolio is not published"));
+        }
+
+        const tplSrc = loadChatTemplate();
+        if (!tplSrc) return res.status(500).send(chatErrorHtml("Chat is temporarily unavailable"));
+
+        const displayName = user.display_name || user.username;
+        const avatar = user.profile_image || "";
+        const initial = String(displayName || "?").trim().charAt(0).toUpperCase() || "?";
+
+        const data = {
+            creator: {
+                id: user.id,
+                slug: user.username,
+                name: displayName,
+                avatar: avatar,
+                initial: initial,
+                has_avatar: !!avatar,
+                show_initial: !avatar
+            },
+            meta: {
+                title: "Chat with " + displayName + " - Crevio"
+            }
+        };
+
+        const html = engine.renderString(tplSrc, data);
+        if (!html) return res.status(500).send(chatErrorHtml("Chat is temporarily unavailable"));
+
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+        res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
+        return res.send(html);
+    } catch (e) {
+        console.error("[visitorChat] failed:", e.message);
+        return res.status(500).send(chatErrorHtml("Something went wrong"));
+    }
+};
