@@ -21,7 +21,14 @@
 </style>
 <style>
 /* User overrides — applied after template CSS to win specificity */
-{{#theme.background}}:root { --bg: {{{ theme.background }}}; }{{/theme.background}}
+{{#theme.background}}
+:root {
+    --bg: {{{ theme.background }}};
+    --fg: {{{ theme.fg }}};
+    --muted: {{{ theme.muted }}};
+    --border: {{{ theme.border }}};
+}
+{{/theme.background}}
 body.crevio-portfolio, body.crevio-cinematic, body.crevio-editorial {
     font-family: '{{{ theme.font }}}', system-ui, sans-serif;
 }

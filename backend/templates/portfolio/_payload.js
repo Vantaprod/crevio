@@ -222,6 +222,19 @@ function buildTestimonials(userId, limit) {
 }
 
 // ---------- Theme ----------
+// Determine if a hex color is light enough to need dark text on top.
+// Relative luminance per WCAG 2.1 (simplified, sRGB).
+function isLightBackground(hex) {
+    if (!hex || typeof hex !== "string") return null;
+    const m = hex.match(/^#([0-9a-f]{6})$/i);
+    if (!m) return null;
+    const r = parseInt(m[1].slice(0, 2), 16) / 255;
+    const g = parseInt(m[1].slice(2, 4), 16) / 255;
+    const b = parseInt(m[1].slice(4, 6), 16) / 255;
+    const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    return lum > 0.55;
+}
+
 function buildTheme(config, templateMeta) {
     const defaults = (templateMeta && templateMeta.default_theme_settings) || {};
     let settings = {};
@@ -233,12 +246,18 @@ function buildTheme(config, templateMeta) {
         } catch (e) { settings = {}; }
     }
 
+    const bgColor = settings.background_color || null;
+    const modeForFg = settings.mode || defaults.mode || "light";
+    const isLight = bgColor ? (isLightBackground(bgColor) === true) : (modeForFg === "light");
     return {
         mode: settings.mode || defaults.mode || "light",
         accent: settings.primary_color || settings.accent || defaults.accent || "#2563EB",
         font: settings.font_family || settings.font || defaults.font || "Inter",
         background: settings.background_color || null,
-        social_display: settings.social_display || "text"
+        social_display: settings.social_display || "text",
+        fg:     isLight ? "#0F172A" : "#F1F5F9",
+        muted:  isLight ? "#475569" : "#94A3B8",
+        border: isLight ? "#E2E8F0" : "#334155"
     };
 }
 

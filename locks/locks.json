@@ -3253,6 +3253,47 @@
         "portfolioAnalyticsController",
         "router.get(\"/analytics\""
       ]
+    },
+    {
+      "id": "phase-26-fg-contrast-payload",
+      "desc": "Payload derives fg/muted/border from background luminance",
+      "type": "fileContains",
+      "file": "backend/templates/portfolio/_payload.js",
+      "patterns": [
+        "isLightBackground",
+        "fg:     isLight",
+        "muted:  isLight"
+      ]
+    },
+    {
+      "id": "phase-26-fg-contrast-minimal",
+      "desc": "Minimal override block sets --fg/--muted/--border from theme",
+      "type": "fileContains",
+      "file": "backend/templates/portfolio/minimal/template.html",
+      "patterns": [
+        "--fg: {{{ theme.fg }}}",
+        "--muted: {{{ theme.muted }}}"
+      ]
+    },
+    {
+      "id": "phase-26-fg-contrast-cinematic",
+      "desc": "Cinematic override block sets --fg/--muted/--border from theme",
+      "type": "fileContains",
+      "file": "backend/templates/portfolio/cinematic/template.html",
+      "patterns": [
+        "--fg: {{{ theme.fg }}}",
+        "--muted: {{{ theme.muted }}}"
+      ]
+    },
+    {
+      "id": "phase-26-fg-contrast-editorial",
+      "desc": "Editorial override block sets --fg/--muted/--border from theme",
+      "type": "fileContains",
+      "file": "backend/templates/portfolio/editorial/template.html",
+      "patterns": [
+        "--fg: {{{ theme.fg }}}",
+        "--muted: {{{ theme.muted }}}"
+      ]
     }
   ]
 }
