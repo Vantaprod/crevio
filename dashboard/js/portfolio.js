@@ -341,7 +341,7 @@ document.addEventListener("DOMContentLoaded", function () {
         })[s]);
     }
     // =========================================================
-    // AI ASSISTANT
+    // AI ASSISTANT (tabbed: Recommend / Title / Tagline / Rewrite)
     // =========================================================
     let aiRecommendation = null;
 
@@ -350,17 +350,31 @@ document.addEventListener("DOMContentLoaded", function () {
         $("aiModalOverlay").setAttribute("aria-hidden", "false");
         setTimeout(function () { $("aiDescription").focus(); }, 50);
         updateAiDescCount();
+        updateAiRewriteCount();
     }
     function closeAiModal() {
         $("aiModalOverlay").classList.remove("open");
         $("aiModalOverlay").setAttribute("aria-hidden", "true");
     }
+
+    function switchAiTab(name) {
+        document.querySelectorAll("#aiTabs .ai-tab").forEach(function (b) {
+            b.classList.toggle("active", b.dataset.tab === name);
+        });
+        document.querySelectorAll(".ai-tab-panel").forEach(function (p) {
+            p.hidden = (p.dataset.panel !== name);
+        });
+    }
+    document.querySelectorAll("#aiTabs .ai-tab").forEach(function (b) {
+        b.addEventListener("click", function () { switchAiTab(b.dataset.tab); });
+    });
+
+    // -- Recommend --
     function updateAiDescCount() {
         const t = $("aiDescription");
         const c = $("aiDescCount");
         if (t && c) c.textContent = String(t.value.length);
     }
-
     function resetAiResult() {
         aiRecommendation = null;
         $("aiResult").style.display = "none";
@@ -370,7 +384,6 @@ document.addEventListener("DOMContentLoaded", function () {
         $("aiAnalyzeBtn").disabled = false;
         $("aiAnalyzeLabel").textContent = "Analyze";
     }
-
     async function analyzeDescription() {
         const description = ($("aiDescription").value || "").trim();
         if (description.length < 10) {
@@ -380,7 +393,6 @@ document.addEventListener("DOMContentLoaded", function () {
         resetAiResult();
         $("aiAnalyzeBtn").disabled = true;
         $("aiAnalyzeLabel").innerHTML = "<span class=\"ai-spinner\"></span>Analyzing...";
-
         try {
             const res = await window.apiFetch("/api/portfolio/ai/recommend", {
                 method: "POST",
@@ -388,7 +400,6 @@ document.addEventListener("DOMContentLoaded", function () {
             });
             const data = await res.json();
             if (!data.success) throw new Error(data.message || "AI request failed");
-
             aiRecommendation = data.recommendation;
             const r = aiRecommendation;
             const templateLabel = r.template.charAt(0).toUpperCase() + r.template.slice(1);
@@ -406,26 +417,131 @@ document.addEventListener("DOMContentLoaded", function () {
             resetAiResult();
         }
     }
-
     async function applyRecommendation() {
         if (!aiRecommendation) return;
         const r = aiRecommendation;
-
-        // 1. Select the recommended template card
         const card = document.querySelector('[data-template="' + r.template + '"]');
         if (card && card.dataset.locked !== "true") {
             document.querySelectorAll("[data-template]").forEach(function (c) { c.classList.remove("active"); });
             card.classList.add("active");
             config.template = r.template;
         }
-
-        // 2. Set accent color + font
-        if ($("primary_color")) $("primary_color").value = r.accent;
+        if ($("primary_color")) {
+            $("primary_color").value = r.accent;
+            if (typeof updateColorSwatches === "function") updateColorSwatches();
+        }
         if ($("font_family")) $("font_family").value = r.font;
-
-        // 3. Save through the existing pipeline
         closeAiModal();
         await saveConfig(false);
+    }
+
+    // -- Write title --
+    function renderTitleResults(titles) {
+        const wrap = $("aiTitleResults");
+        wrap.innerHTML = titles.map(function (t, i) {
+            return '<div class="ai-result-item"><span>' + escapeHtml(t) + '</span>' +
+                '<button type="button" class="apply-mini" data-apply-title="' + i + '">Use</button></div>';
+        }).join("");
+        wrap.querySelectorAll("[data-apply-title]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                const idx = parseInt(btn.dataset.applyTitle, 10);
+                const t = titles[idx];
+                if (!t || !$("title")) return;
+                $("title").value = t;
+                closeAiModal();
+                saveConfig(false);
+            });
+        });
+    }
+    async function generateTitles() {
+        const toneEl = document.querySelector('input[name="titleTone"]:checked');
+        const tone = toneEl ? toneEl.value : "professional";
+        const wrap = $("aiTitleResults");
+        wrap.innerHTML = '<div class="ai-loading"><span class="ai-spinner"></span>Generating...</div>';
+        try {
+            const res = await window.apiFetch("/api/portfolio/ai/write-title", {
+                method: "POST", body: JSON.stringify({ tone: tone })
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.message || "Request failed");
+            renderTitleResults(data.titles || []);
+        } catch (err) {
+            wrap.innerHTML = '<div class="ai-error">' + escapeHtml(err.message) + '</div>';
+            showToast(err.message, true);
+        }
+    }
+
+    // -- Taglines --
+    function renderTaglineResults(taglines) {
+        const wrap = $("aiTaglineResults");
+        wrap.innerHTML = taglines.map(function (t, i) {
+            return '<div class="ai-result-item"><span>' + escapeHtml(t) + '</span>' +
+                '<button type="button" class="apply-mini" data-apply-tagline="' + i + '">Use</button></div>';
+        }).join("");
+        wrap.querySelectorAll("[data-apply-tagline]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                const idx = parseInt(btn.dataset.applyTagline, 10);
+                const t = taglines[idx];
+                if (!t || !$("tagline")) return;
+                $("tagline").value = t;
+                closeAiModal();
+                saveConfig(false);
+            });
+        });
+    }
+    async function generateTaglines() {
+        const wrap = $("aiTaglineResults");
+        wrap.innerHTML = '<div class="ai-loading"><span class="ai-spinner"></span>Generating...</div>';
+        try {
+            const res = await window.apiFetch("/api/portfolio/ai/suggest-taglines", {
+                method: "POST", body: JSON.stringify({ count: 5 })
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.message || "Request failed");
+            renderTaglineResults(data.taglines || []);
+        } catch (err) {
+            wrap.innerHTML = '<div class="ai-error">' + escapeHtml(err.message) + '</div>';
+            showToast(err.message, true);
+        }
+    }
+
+    // -- Rewrite --
+    function updateAiRewriteCount() {
+        const t = $("aiRewriteText");
+        const c = $("aiRewriteCount");
+        if (t && c) c.textContent = String(t.value.length);
+    }
+    async function rewriteDescription() {
+        const text = ($("aiRewriteText").value || "").trim();
+        if (text.length < 10) { showToast("Paste at least 10 characters.", true); return; }
+        const kindEl = document.querySelector('input[name="rewriteKind"]:checked');
+        const kind = kindEl ? kindEl.value : "general";
+        const wrap = $("aiRewriteResult");
+        wrap.innerHTML = '<div class="ai-loading"><span class="ai-spinner"></span>Rewriting...</div>';
+        try {
+            const res = await window.apiFetch("/api/portfolio/ai/rewrite-description", {
+                method: "POST", body: JSON.stringify({ text: text, kind: kind })
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.message || "Request failed");
+            wrap.innerHTML = '<div class="ai-rewrite-out">' + escapeHtml(data.rewritten) + '</div>' +
+                '<div class="ai-rewrite-actions">' +
+                    '<button type="button" class="btn-secondary" id="aiRewriteCopy">Copy</button>' +
+                    '<button type="button" class="btn-secondary" id="aiRewriteNew">Try again</button>' +
+                '</div>';
+            const copyBtn = $("aiRewriteCopy");
+            if (copyBtn) copyBtn.addEventListener("click", function () {
+                try { navigator.clipboard.writeText(data.rewritten);
+                    copyBtn.textContent = "Copied";
+                    setTimeout(function () { copyBtn.textContent = "Copy"; }, 1500);
+                } catch (e) { showToast("Copy failed", true); }
+            });
+            const newBtn = $("aiRewriteNew");
+            if (newBtn) newBtn.addEventListener("click", rewriteDescription);
+        } catch (err) {
+            wrap.innerHTML = '<div class="ai-error">' + escapeHtml(err.message) + '</div>';
+            showToast(err.message, true);
+        }
     }
 
     $("aiOpenBtn")?.addEventListener("click", openAiModal);
@@ -437,11 +553,10 @@ document.addEventListener("DOMContentLoaded", function () {
     $("aiAnalyzeBtn")?.addEventListener("click", analyzeDescription);
     $("aiApplyBtn")?.addEventListener("click", applyRecommendation);
     $("aiDescription")?.addEventListener("input", updateAiDescCount);
-
-
-    // =========================================================
-    // INIT
-    // =========================================================
+    $("aiTitleGenBtn")?.addEventListener("click", generateTitles);
+    $("aiTaglineGenBtn")?.addEventListener("click", generateTaglines);
+    $("aiRewriteBtn")?.addEventListener("click", rewriteDescription);
+    $("aiRewriteText")?.addEventListener("input", updateAiRewriteCount);
     // -----------------------------------------------------
     // COLOR PRESETS
     // -----------------------------------------------------

@@ -109,6 +109,25 @@
         .ai-result-row span { color:var(--text-secondary); }
         .ai-reason { font-size:13px; color:var(--text-secondary); margin-top:12px; padding:10px 12px; background:rgba(37,99,235,0.06); border-left:3px solid var(--accent); border-radius:6px; line-height:1.5; }
         .ai-color-dot { display:inline-block; width:14px; height:14px; border-radius:50%; border:1px solid var(--border-color); vertical-align:middle; margin-right:6px; }
+        .ai-tabs { display:flex; gap:4px; padding:12px 20px 0; border-bottom:1px solid var(--border-color); overflow-x:auto; }
+        .ai-tab { background:transparent; border:none; color:var(--text-secondary); font-size:13px; font-weight:500; padding:10px 14px; cursor:pointer; border-radius:8px 8px 0 0; font-family:inherit; position:relative; white-space:nowrap; }
+        .ai-tab:hover { color:var(--text-primary); }
+        .ai-tab.active { color:var(--accent); background:var(--bg-input); }
+        .ai-tab.active::after { content:''; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--accent); }
+        .ai-tab-panel[hidden] { display:none; }
+        .ai-radio-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+        .ai-radio-row label { display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border:1px solid var(--border-color); border-radius:8px; font-size:13px; cursor:pointer; color:var(--text-secondary); }
+        .ai-radio-row label:hover { border-color:var(--accent); color:var(--text-primary); }
+        .ai-radio-row input[type="radio"] { accent-color:var(--accent); }
+        .ai-result-list { display:flex; flex-direction:column; gap:8px; margin-top:14px; }
+        .ai-result-item { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; padding:12px 14px; border:1px solid var(--border-color); border-radius:10px; background:var(--bg-input); font-size:14px; line-height:1.5; color:var(--text-primary); }
+        .ai-result-item .apply-mini { flex-shrink:0; padding:6px 12px; font-size:12px; font-weight:600; border-radius:8px; border:none; background:var(--accent); color:#fff; cursor:pointer; font-family:inherit; }
+        .ai-result-item .apply-mini:hover { filter:brightness(1.06); }
+        .ai-rewrite-out { white-space:pre-wrap; font-size:14px; line-height:1.6; padding:14px; background:var(--bg-input); border-radius:10px; border:1px solid var(--border-color); margin-top:14px; color:var(--text-primary); }
+        .ai-rewrite-actions { display:flex; gap:8px; margin-top:10px; }
+        .ai-loading { padding:14px; font-size:13px; color:var(--text-muted); text-align:center; }
+        .ai-error { padding:12px 14px; font-size:13px; color:var(--danger); background:rgba(239,68,68,0.08); border-radius:10px; margin-top:14px; }
+
         .ai-spinner { display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:aiSpin 0.7s linear infinite; vertical-align:-2px; margin-right:8px; }
         @keyframes aiSpin { to { transform: rotate(360deg); } }
 
@@ -513,7 +532,7 @@
                 Save Changes
             </button>
         </div>
-        <!-- AI MODAL -->
+                <!-- AI MODAL -->
         <div class="ai-modal-overlay" id="aiModalOverlay" role="dialog" aria-hidden="true">
             <div class="ai-modal-card">
                 <div class="ai-modal-head">
@@ -522,27 +541,79 @@
                         <i data-lucide="x" class="icon" style="width:18px;height:18px;"></i>
                     </button>
                 </div>
+                <div class="ai-tabs" id="aiTabs">
+                    <button class="ai-tab active" data-tab="recommend" type="button">Recommend</button>
+                    <button class="ai-tab" data-tab="title" type="button">Write title</button>
+                    <button class="ai-tab" data-tab="tagline" type="button">Taglines</button>
+                    <button class="ai-tab" data-tab="rewrite" type="button">Rewrite</button>
+                </div>
                 <div class="ai-modal-body">
-                    <label for="aiDescription">Describe yourself and your work</label>
-                    <textarea id="aiDescription" placeholder="e.g., I'm a Lagos-based fashion photographer. I shoot editorial portraits and brand campaigns for beauty and lifestyle clients." maxlength="500"></textarea>
-                    <div class="ai-modal-hint"><span id="aiDescCount">0</span>/500 characters &middot; The more specific, the better the pick.</div>
-
-                    <div id="aiResult" class="ai-result" style="display:none;"></div>
-
-                    <div class="ai-modal-actions">
-                        <button class="btn-secondary" id="aiCancelBtn" type="button">Cancel</button>
-                        <button class="btn-primary" id="aiAnalyzeBtn" type="button">
-                            <i data-lucide="sparkles" class="icon" style="width:16px;height:16px;"></i>
-                            <span id="aiAnalyzeLabel">Analyze</span>
-                        </button>
-                        <button class="btn-primary" id="aiApplyBtn" type="button" style="display:none;">
-                            <i data-lucide="check" class="icon" style="width:16px;height:16px;"></i>
-                            Apply
-                        </button>
+                    <div class="ai-tab-panel" data-panel="recommend">
+                        <label for="aiDescription">Describe yourself and your work</label>
+                        <textarea id="aiDescription" placeholder="e.g., I'm a Lagos-based fashion photographer. I shoot editorial portraits and brand campaigns for beauty and lifestyle clients." maxlength="500"></textarea>
+                        <div class="ai-modal-hint"><span id="aiDescCount">0</span>/500 characters &middot; The more specific, the better the pick.</div>
+                        <div id="aiResult" class="ai-result" style="display:none;"></div>
+                        <div class="ai-modal-actions">
+                            <button class="btn-secondary" id="aiCancelBtn" type="button">Cancel</button>
+                            <button class="btn-primary" id="aiAnalyzeBtn" type="button">
+                                <i data-lucide="sparkles" class="icon" style="width:16px;height:16px;"></i>
+                                <span id="aiAnalyzeLabel">Analyze</span>
+                            </button>
+                            <button class="btn-primary" id="aiApplyBtn" type="button" style="display:none;">
+                                <i data-lucide="check" class="icon" style="width:16px;height:16px;"></i>
+                                Apply
+                            </button>
+                        </div>
+                    </div>
+                    <div class="ai-tab-panel" data-panel="title" hidden>
+                        <label>Tone</label>
+                        <div class="ai-radio-row">
+                            <label><input type="radio" name="titleTone" value="professional" checked> Professional</label>
+                            <label><input type="radio" name="titleTone" value="confident"> Confident</label>
+                            <label><input type="radio" name="titleTone" value="friendly"> Friendly</label>
+                            <label><input type="radio" name="titleTone" value="minimal"> Minimal</label>
+                        </div>
+                        <div class="ai-modal-actions" style="justify-content:flex-start;">
+                            <button class="btn-primary" id="aiTitleGenBtn" type="button">
+                                <i data-lucide="sparkles" class="icon" style="width:16px;height:16px;"></i>
+                                Generate titles
+                            </button>
+                        </div>
+                        <div id="aiTitleResults" class="ai-result-list"></div>
+                    </div>
+                    <div class="ai-tab-panel" data-panel="tagline" hidden>
+                        <p class="ai-modal-hint" style="margin-bottom:12px;">A tagline sits under your name and says what you do.</p>
+                        <div class="ai-modal-actions" style="justify-content:flex-start;">
+                            <button class="btn-primary" id="aiTaglineGenBtn" type="button">
+                                <i data-lucide="sparkles" class="icon" style="width:16px;height:16px;"></i>
+                                Suggest taglines
+                            </button>
+                        </div>
+                        <div id="aiTaglineResults" class="ai-result-list"></div>
+                    </div>
+                    <div class="ai-tab-panel" data-panel="rewrite" hidden>
+                        <label for="aiRewriteText">Paste text to rewrite</label>
+                        <textarea id="aiRewriteText" placeholder="Paste a project, service, or bio description..." maxlength="3000"></textarea>
+                        <div class="ai-modal-hint"><span id="aiRewriteCount">0</span>/3000 characters</div>
+                        <label style="margin-top:14px;">What is this?</label>
+                        <div class="ai-radio-row">
+                            <label><input type="radio" name="rewriteKind" value="general" checked> General</label>
+                            <label><input type="radio" name="rewriteKind" value="project"> Project</label>
+                            <label><input type="radio" name="rewriteKind" value="service"> Service</label>
+                            <label><input type="radio" name="rewriteKind" value="bio"> Bio</label>
+                        </div>
+                        <div class="ai-modal-actions" style="justify-content:flex-start;">
+                            <button class="btn-primary" id="aiRewriteBtn" type="button">
+                                <i data-lucide="sparkles" class="icon" style="width:16px;height:16px;"></i>
+                                Rewrite
+                            </button>
+                        </div>
+                        <div id="aiRewriteResult"></div>
                     </div>
                 </div>
             </div>
         </div>
+
     </main>
 
     <div class="toast" id="toast"></div>

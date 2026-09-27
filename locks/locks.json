@@ -3316,6 +3316,58 @@
         "updateColorSwatches",
         "#colorPresets .swatch"
       ]
+    },
+    {
+      "id": "phase-28-ai-content-controller",
+      "desc": "AI content controller exposes writeTitle/suggestTaglines/rewriteDescription with business gate",
+      "type": "fileContains",
+      "file": "backend/controllers/portfolioAiContentController.js",
+      "patterns": [
+        "writeTitle",
+        "suggestTaglines",
+        "rewriteDescription",
+        "gateBusiness",
+        "loadUserContext"
+      ]
+    },
+    {
+      "id": "phase-28-ai-content-routes",
+      "desc": "AI routes expose /write-title, /suggest-taglines, /rewrite-description",
+      "type": "fileContains",
+      "file": "backend/routes/portfolioAiRoutes.js",
+      "patterns": [
+        "contentController",
+        "/write-title",
+        "/suggest-taglines",
+        "/rewrite-description"
+      ]
+    },
+    {
+      "id": "phase-28-ai-tabs-ui",
+      "desc": "Picker page has tabbed AI modal (Recommend / Title / Tagline / Rewrite)",
+      "type": "fileContains",
+      "file": "dashboard/pages/portfolio.html",
+      "patterns": [
+        "id=\"aiTabs\"",
+        "data-tab=\"recommend\"",
+        "data-tab=\"title\"",
+        "data-tab=\"tagline\"",
+        "data-tab=\"rewrite\"",
+        "id=\"aiTitleGenBtn\"",
+        "id=\"aiRewriteBtn\""
+      ]
+    },
+    {
+      "id": "phase-28-ai-tabs-js",
+      "desc": "Picker JS wires the 3 new AI endpoints + tab switching",
+      "type": "fileContains",
+      "file": "dashboard/js/portfolio.js",
+      "patterns": [
+        "switchAiTab",
+        "/api/portfolio/ai/write-title",
+        "/api/portfolio/ai/suggest-taglines",
+        "/api/portfolio/ai/rewrite-description"
+      ]
     }
   ]
 }
