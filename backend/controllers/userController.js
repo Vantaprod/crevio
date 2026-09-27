@@ -20,7 +20,7 @@ const SAFE_FIELDS = [
     "location", "phone", "role", "primary_profession", "specialties",
     "email_verified", "phone_verified", "account_status",
     "created_at", "updated_at"
-];
+]
 
 function selectUser(id) {
     const cols = userCols();
@@ -49,7 +49,7 @@ exports.getMe = (req, res) => {
 exports.updateMe = (req, res) => {
     try {
         const cols = userCols();
-        const allowed = ["display_name", "bio", "location", "phone", "primary_profession", "specialties"];
+        const allowed = ["display_name", "bio", "location", "phone", "primary_profession", "specialties", "whatsapp_number"];
         const updates = {};
 
         for (const key of allowed) {

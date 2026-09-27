@@ -34,6 +34,7 @@ document.addEventListener("DOMContentLoaded", function () {
             $("email").value              = u.email || "";
             $("display_name").value       = u.display_name || "";
             $("phone").value              = u.phone || "";
+            $("whatsapp_number").value      = u.whatsapp_number || "";
             $("bio").value                = u.bio || "";
             $("location").value           = u.location || "";
             $("primary_profession").value = u.primary_profession || "";
@@ -72,6 +73,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const payload = {
             display_name:       $("display_name").value.trim(),
             phone:              $("phone").value.trim(),
+            whatsapp_number:    $("whatsapp_number").value.trim(),
             bio:                $("bio").value.trim(),
             location:           $("location").value.trim(),
             primary_profession: $("primary_profession").value.trim(),

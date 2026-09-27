@@ -3143,6 +3143,35 @@
         "crevio-chat-msg",
         "crevio-contact-submit"
       ]
+    },
+    {
+      "id": "phase-21-whatsapp-field",
+      "desc": "Profile page has a WhatsApp number input",
+      "type": "fileContains",
+      "file": "dashboard/pages/profile.html",
+      "patterns": [
+        "id=\"whatsapp_number\"",
+        "Continue on WhatsApp"
+      ]
+    },
+    {
+      "id": "phase-21-whatsapp-js",
+      "desc": "Profile JS loads + saves whatsapp_number",
+      "type": "fileContains",
+      "file": "dashboard/js/profile.js",
+      "patterns": [
+        "u.whatsapp_number",
+        "$(\"whatsapp_number\").value.trim()"
+      ]
+    },
+    {
+      "id": "phase-21-whatsapp-controller",
+      "desc": "userController allows + returns whatsapp_number",
+      "type": "fileContains",
+      "file": "backend/controllers/userController.js",
+      "patterns": [
+        "\"whatsapp_number\""
+      ]
     }
   ]
 }
