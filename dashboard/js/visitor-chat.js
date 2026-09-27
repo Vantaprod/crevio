@@ -51,14 +51,22 @@
         if (footerEl) footerEl.style.display = "none";
     }
 
-    function showStatus(title, body, linkHref, linkLabel) {
+    function showStatus(title, body, linkHref, linkLabel, actionId) {
         hideChrome();
         if (!statusEl) return;
         statusEl.hidden = false;
         statusEl.innerHTML =
             "<h2>" + esc(title) + "</h2><p>" + body +
             (linkHref ? '<br><br><a href="' + esc(linkHref) + '">' + esc(linkLabel) + "</a>" : "") +
+            (actionId ? '<br><br><button type="button" id="' + actionId + '" style="background:#2563EB;color:#fff;border:none;padding:10px 18px;border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Start a new conversation</button>' : "") +
             "</p>";
+        if (actionId) {
+            var btn = document.getElementById(actionId);
+            if (btn) btn.addEventListener("click", function () {
+                try { sessionStorage.removeItem(storageKey); } catch (e) {}
+                location.href = "/p/" + encodeURIComponent(creatorSlug);
+            });
+        }
     }
 
     function timeLabel(iso) {
@@ -155,9 +163,10 @@
         if (state.timer) { clearInterval(state.timer); state.timer = null; }
         showStatus(
             "This chat is no longer available",
-            "The conversation may have been cleared. Head back to the portfolio to start a new one.",
+            "The conversation may have been cleared. Start a new one from the portfolio.",
             "/p/" + encodeURIComponent(creatorSlug),
-            "Back to portfolio →"
+            "Back to portfolio \u2192",
+            "vcStartOver"
         );
     }
 
@@ -239,7 +248,7 @@
             "Chat session not found",
             "Start a conversation from the portfolio first, then come back here.",
             "/p/" + encodeURIComponent(creatorSlug),
-            "Back to portfolio →"
+            "Back to portfolio \u2192"
         );
         return;
     }
