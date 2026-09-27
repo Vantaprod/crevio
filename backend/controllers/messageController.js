@@ -477,9 +477,7 @@ exports.startConversation = (req, res) => {
         }
         try {
             const __who = (client_name && String(client_name).trim()) || "a client";
-            const __prev = message && String(message).trim()
-                ? String(message).trim().slice(0, 180)
-                : "New inquiry received.";
+            const __prev = "You have a new message from " + (client_name || "a client") + ".";
             notificationService.create({
                 userId: creator_id,
                 type: "message",
@@ -893,7 +891,7 @@ exports.sendVisitorMessage = (req, res) => {
                 userId: conv.creator_id,
                 type: "message",
                 title: "New message from " + (conv.client_name || "a client"),
-                message: message.slice(0, 180),
+                message: "You have a new message from " + (conv.client_name || "a client") + ".",
                 entityType: "conversation",
                 entityId: conversationId
             });

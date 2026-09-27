@@ -3172,6 +3172,15 @@
       "patterns": [
         "\"whatsapp_number\""
       ]
+    },
+    {
+      "id": "phase-22-notification-hides-preview",
+      "desc": "Message notifications never include the message body (privacy)",
+      "type": "fileContains",
+      "file": "backend/controllers/messageController.js",
+      "patterns": [
+        "You have a new message from"
+      ]
     }
   ]
 }
