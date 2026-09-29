@@ -3457,7 +3457,7 @@
       "patterns": [
         "v3",
         "openInlineForm",
-        "no live conversation yet -- create one with this first message",
+        "No live conversation yet -- create one with this first message.",
         "state.name || \"Visitor\""
       ]
     },
